@@ -1,0 +1,17 @@
+{
+  "name": "Eu Que Me Vejo — Diário ACT",
+  "short_name": "Eu Que Me Vejo",
+  "description": "Diário entre sessões inspirado na Terapia de Aceitação e Compromisso (ACT), de Socorro Silveira, Psicóloga Clínica.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EFEAE0",
+  "theme_color": "#155870",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

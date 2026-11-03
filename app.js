@@ -138,6 +138,14 @@ const ICONS = {
   table: '<path d="M3 3h18v18H3z"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/>',
   instagram: '<rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><path d="M17.5 6.5h.01"/>',
   wind: '<path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/>',
+  shareIos: '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="m16 6-4-4-4 4"/><path d="M12 2v13"/>',
+  plusSquare: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8"/><path d="M12 8v8"/>',
+  dotsV: '<circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/>',
+  dotsH: '<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>',
+  menu: '<path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+  compassOpen: '<circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z"/>',
+  link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
   trendDown: '<path d="m22 17-8.5-8.5-5 5L2 7"/><path d="M16 17h6v-6"/>'
 };
 function icon(name, cls = '') {
@@ -213,7 +221,7 @@ function haptic() { try { navigator.vibrate && navigator.vibrate(10); } catch (e
 
 /* ---------------- Armazenamento local ---------------- */
 const KEY = 'euqmv:v2';
-const state = { name: '', entries: [], theme: 'system', onboarded: false, draft: null, reminder: '20:00' };
+const state = { name: '', entries: [], theme: 'system', onboarded: false, draft: null, reminder: '20:00', installDismissed: false };
 let storageOk = true;
 function load() {
   try {
@@ -362,6 +370,7 @@ function openFlow(entry = null) {
   }
   flow.step = entry ? STEPS.length - 1 : 0;
   flow.dir = 1; flow.done = false; flow.open = true;
+  hideInstallCard();
   $('#flow').hidden = false;
   document.body.classList.add('locked', 'flow-open');
   pushLayer('flow');
@@ -860,6 +869,12 @@ function renderAbout() {
         <p class="setting-help">Cria um evento diário na agenda do seu celular, com alerta no horário escolhido. Funciona mesmo com o app fechado.</p>
       </div>
       <div class="setting">
+        <span class="label">Aplicativo</span>
+        ${isStandalone()
+          ? `<div class="installed-ok">${icon('check', 'ic-sm')} Instalado na tela inicial</div>`
+          : `<button class="btn btn-soft btn-block" type="button" data-act="install-help">${icon('phoneDev', 'ic-sm')} Como instalar na tela inicial</button>`}
+      </div>
+      <div class="setting">
         <span class="label">Seus dados</span>
         <button class="btn btn-outline btn-block" type="button" data-act="wipe" style="color:var(--danger);border-color:color-mix(in srgb, var(--danger) 40%, transparent)" ${state.entries.length || draftHasContent(state.draft) ? '' : 'disabled'}>${icon('trash', 'ic-sm')} Apagar todos os registros</button>
       </div>
@@ -1173,12 +1188,13 @@ async function doReport(kind) {
     toast('Não foi possível gerar o PDF agora. Use "Copiar" e cole no e-mail.');
   }
 }
-async function copyText(text) {
-  try { await navigator.clipboard.writeText(text); toast('Relatório copiado. Cole no e-mail ou na conversa.'); }
+async function copyText(text, quiet) {
+  if (quiet === undefined && /^https?:/.test(text)) quiet = true;
+  try { await navigator.clipboard.writeText(text); if (!quiet) toast('Relatório copiado. Cole no e-mail ou na conversa.'); }
   catch (e) {
     const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
     document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); toast('Relatório copiado. Cole no e-mail ou na conversa.'); } catch (e2) { toast('Não foi possível copiar automaticamente.'); }
+    try { document.execCommand('copy'); if (!quiet) toast('Relatório copiado. Cole no e-mail ou na conversa.'); } catch (e2) { toast('Não foi possível copiar automaticamente.'); }
     ta.remove();
   }
 }
@@ -1207,6 +1223,147 @@ function downloadICS() {
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   toast(`Abra o arquivo para adicionar o lembrete das ${t} à sua agenda.`);
+}
+
+/* ---------------- Instalar na tela inicial ---------------- */
+const INSTALL = { deferred: null, shownThisVisit: false };
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  INSTALL.deferred = e;
+  const btn = $('#installNow'); if (btn) btn.hidden = false;
+});
+window.addEventListener('appinstalled', () => {
+  INSTALL.deferred = null;
+  hideInstallCard();
+  toast('Pronto! O app foi adicionado à sua tela inicial.');
+});
+function isStandalone() {
+  return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+}
+function detectDevice() {
+  const ua = navigator.userAgent || '';
+  const ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const ipad = /iPad/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const android = /Android/i.test(ua);
+  const inApp = /Instagram|FBAN|FBAV|FB_IAB|FBIOS|Line\/|WhatsApp|TikTok|musical_ly|Snapchat|LinkedInApp|Twitter/i.test(ua);
+  const inAppName = /Instagram/i.test(ua) ? 'Instagram' : /FBAN|FBAV|FB_IAB|FBIOS/i.test(ua) ? 'Facebook' : /WhatsApp/i.test(ua) ? 'WhatsApp' : /TikTok|musical_ly/i.test(ua) ? 'TikTok' : 'outro aplicativo';
+  let browser = 'chrome';
+  if (ios) browser = /CriOS/.test(ua) ? 'chrome' : /FxiOS/.test(ua) ? 'firefox' : /EdgiOS/.test(ua) ? 'edge' : 'safari';
+  else if (android) browser = /SamsungBrowser/i.test(ua) ? 'samsung' : /Firefox/i.test(ua) ? 'firefox' : /EdgA/i.test(ua) ? 'edge' : 'chrome';
+  else browser = /Edg\//.test(ua) ? 'edge' : /Firefox/i.test(ua) ? 'firefox' : /Safari/.test(ua) && !/Chrome/.test(ua) ? 'safari' : 'chrome';
+  const os = ios ? 'ios' : android ? 'android' : 'desktop';
+  const BN = { safari: 'Safari', chrome: 'Chrome', firefox: 'Firefox', edge: 'Edge', samsung: 'Samsung Internet' };
+  const deviceName = ios ? (ipad ? 'iPad' : 'iPhone') : android ? 'Android' : 'Computador';
+  return { os, ios, ipad, android, inApp, inAppName, browser, label: inApp ? `${deviceName} · dentro do ${inAppName}` : `${deviceName} · ${BN[browser]}` };
+}
+function installSteps(d) {
+  const S = (ic, html) => ({ ic, html });
+  if (d.inApp) {
+    const target = d.ios ? 'Safari' : 'Chrome';
+    return {
+      intro: `Você abriu o link dentro do ${esc(d.inAppName)}. Para instalar, primeiro abra o app no ${target}.`,
+      steps: [
+        S(d.ios ? 'dotsH' : 'dotsV', `Toque no menu <b>${d.ios ? '⋯' : '⋮'}</b> no canto da tela.`),
+        S('compassOpen', `Escolha <b>Abrir no ${target}</b> (ou "Abrir no navegador").`),
+        S('plusSquare', `No ${target}, abra este aviso de novo para ver os passos da instalação.`)
+      ],
+      copy: true
+    };
+  }
+  if (d.ios && d.browser === 'safari') return {
+    intro: 'No iPhone e no iPad, a instalação é feita pelo Safari, em poucos toques.',
+    steps: [
+      S('shareIos', `Toque no botão <b>Compartilhar</b> ${d.ipad ? 'no topo da tela, ao lado do endereço' : 'na barra de baixo'}. Se ele não aparecer, toque antes em <b>⋯</b>.`),
+      S('plusSquare', 'Role a lista e toque em <b>Adicionar à Tela de Início</b>.'),
+      S('check', 'Confira o nome "Eu Que Me Vejo" e toque em <b>Adicionar</b>, no canto superior.')
+    ]
+  };
+  if (d.ios) return {
+    intro: `No iPhone, o ${d.browser === 'chrome' ? 'Chrome' : 'seu navegador'} também consegue instalar o app. Se não encontrar a opção, abra este endereço no Safari.`,
+    steps: [
+      S('shareIos', 'Toque no botão <b>Compartilhar</b>, ao lado da barra de endereço.'),
+      S('plusSquare', 'Toque em <b>Adicionar à Tela de Início</b>.'),
+      S('check', 'Toque em <b>Adicionar</b> para confirmar.')
+    ],
+    copy: true
+  };
+  if (d.android && d.browser === 'samsung') return {
+    intro: 'No Samsung Internet, a instalação fica no menu do navegador.',
+    steps: [
+      S('menu', 'Toque no menu <b>≡</b>, na barra de baixo.'),
+      S('plusSquare', 'Toque em <b>Adicionar página a</b> e depois em <b>Tela inicial</b>.'),
+      S('check', 'Confirme em <b>Adicionar</b>.')
+    ]
+  };
+  if (d.android) return {
+    intro: 'No Android, o app é instalado direto pelo navegador e ganha ícone próprio, como os outros aplicativos.',
+    steps: [
+      S('dotsV', `Toque no menu <b>⋮</b>, no canto superior direito${d.browser === 'firefox' ? ' (no Firefox, ele fica na barra de baixo)' : ''}.`),
+      S('download', 'Toque em <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.'),
+      S('check', 'Confirme em <b>Instalar</b>. O ícone aparece na sua tela inicial.')
+    ]
+  };
+  return {
+    intro: 'O Eu Que Me Vejo foi pensado para o celular. Abra este endereço no seu celular para instalá-lo.',
+    steps: [
+      S('phoneDev', 'No celular, abra <b>eu-que-me-vejo.vercel.app</b>.'),
+      S('plusSquare', 'Abra este aviso no celular para ver os passos do seu aparelho.'),
+      S('download', `No computador, ${d.browser === 'safari' ? 'use Arquivo › Adicionar ao Dock' : 'use o ícone de instalar na barra de endereço'}, se quiser.`)
+    ],
+    copy: true
+  };
+}
+function installSheetHTML() {
+  const d = detectDevice(), g = installSteps(d);
+  return `<h3 class="f-sit"><span class="q-ic">${icon('phoneDev')}</span>Instalar na tela inicial</h3>
+    <div class="device-badge">${icon(d.ios ? 'phoneDev' : d.android ? 'phoneDev' : 'info', 'ic-sm')} Seu aparelho: ${esc(d.label)}</div>
+    <p>${g.intro}</p>
+    <button class="btn btn-primary btn-block" type="button" id="installNow" data-act="install-now" style="--stage:var(--blue-deep)" ${INSTALL.deferred ? '' : 'hidden'}>${icon('download')} Instalar agora</button>
+    <ol class="install-steps">${g.steps.map((st, i) => `<li><span class="is-n">${i + 1}</span><span class="is-ic">${icon(st.ic)}</span><span class="is-t">${st.html}</span></li>`).join('')}</ol>
+    <div class="install-preview"><img src="apple-touch-icon.png" alt="" width="52" height="52"><span>O ícone do app vai aparecer assim na sua tela inicial, com o nome <b>Eu Que Me Vejo</b>.</span></div>
+    ${g.copy ? `<button class="btn btn-outline btn-block" type="button" data-act="copy-link">${icon('link', 'ic-sm')} Copiar o endereço do app</button>` : ''}
+    <div class="sheet-actions">
+      <button class="btn btn-ghost" type="button" data-act="install-never">Não mostrar mais</button>
+      <button class="btn btn-primary" type="button" data-close-sheet style="--stage:var(--blue-deep)">Entendi</button>
+    </div>`;
+}
+function renderInstallCard() {
+  if (isStandalone() || state.installDismissed || INSTALL.shownThisVisit || $('#installCard')) return;
+  const d = detectDevice();
+  if (d.os === 'desktop' && !INSTALL.deferred) return;
+  INSTALL.shownThisVisit = true;
+  const how = d.inApp ? `Abra no ${d.ios ? 'Safari' : 'Chrome'} e adicione o app à sua tela inicial.`
+    : d.ios ? 'Toque em Compartilhar e depois em "Adicionar à Tela de Início".'
+    : d.android ? `Instale pelo menu ${d.browser === 'samsung' ? '≡' : '⋮'} do navegador.`
+    : 'Instale o app neste computador.';
+  const el = document.createElement('div');
+  el.className = 'install-card'; el.id = 'installCard';
+  el.setAttribute('role', 'dialog'); el.setAttribute('aria-labelledby', 'installTitle');
+  el.innerHTML = `
+    <img class="install-icon" src="apple-touch-icon.png" alt="" width="48" height="48">
+    <div class="install-body">
+      <div class="install-title" id="installTitle">Tenha o app na sua tela inicial</div>
+      <div class="install-text">${esc(how)} Ele abre em tela cheia, como um aplicativo.</div>
+      <div class="install-actions">
+        ${INSTALL.deferred && !d.inApp ? `<button class="btn btn-primary btn-sm" type="button" data-act="install-now" style="--stage:var(--blue-deep)">${icon('download', 'ic-sm')} Instalar agora</button>` : ''}
+        <button class="btn ${INSTALL.deferred && !d.inApp ? 'btn-outline' : 'btn-primary'} btn-sm" type="button" data-act="install-help" style="--stage:var(--blue-deep)">Ver como fazer</button>
+      </div>
+    </div>
+    <button class="install-close" type="button" data-act="install-close" aria-label="Fechar aviso">${icon('x', 'ic-sm')}</button>`;
+  document.body.appendChild(el);
+}
+function hideInstallCard() {
+  const el = $('#installCard'); if (!el) return;
+  el.classList.add('closing');
+  setTimeout(() => el.remove(), 260);
+}
+function maybeShowInstall(delay) { setTimeout(() => { if (!flow.open && $('#onboarding').hidden) renderInstallCard(); }, delay); }
+async function runInstallPrompt() {
+  const ev = INSTALL.deferred;
+  if (!ev) { openSheet(installSheetHTML(), 'Instalar na tela inicial'); return; }
+  INSTALL.deferred = null;
+  ev.prompt();
+  try { const r = await ev.userChoice; if (r && r.outcome === 'accepted') hideInstallCard(); } catch (e) {}
 }
 
 /* ---------------- Boas-vindas ---------------- */
@@ -1239,6 +1396,7 @@ function renderOnboarding() {
     ob.classList.add('closing');
     setTimeout(() => { ob.hidden = true; ob.classList.remove('closing'); document.body.classList.remove('locked'); }, 450);
     refresh();
+    maybeShowInstall(900);
   });
   $('#obName').addEventListener('keydown', e => { if (e.key === 'Enter') $('#obStart').click(); });
 }
@@ -1258,6 +1416,11 @@ document.addEventListener('click', e => {
   if (ds.act === 'new') return openFlow();
   if (ds.act === 'discard-draft') return confirmSheet({ title: 'Começar de novo?', text: 'O registro em andamento será descartado.', ok: 'Descartar', onOk: () => { state.draft = null; save(); refresh(); } });
   if (ds.act === 'ics') return downloadICS();
+  if (ds.act === 'install-help') { hideInstallCard(); return openSheet(installSheetHTML(), 'Instalar na tela inicial'); }
+  if (ds.act === 'install-close') return hideInstallCard();
+  if (ds.act === 'install-now') { closeSheet(); return runInstallPrompt(); }
+  if (ds.act === 'install-never') { state.installDismissed = true; save(); hideInstallCard(); closeSheet(); return toast('Tudo bem. As instruções continuam em Sobre › Ajustes.'); }
+  if (ds.act === 'copy-link') return copyText(location.href.split('#')[0].split('?')[0]).then(() => toast('Endereço copiado. Cole no Safari ou no Chrome.'));
   if (ds.act === 'wipe') return confirmSheet({
     title: 'Apagar todos os registros?', text: 'Isso remove todos os registros e o rascunho deste aparelho. Não dá para desfazer. Se quiser guardar uma cópia, baixe o PDF no Histórico antes.',
     ok: 'Apagar tudo', onOk: () => { state.entries = []; state.draft = null; save(); refresh(); toast('Registros apagados deste aparelho.'); }
@@ -1333,6 +1496,7 @@ load();
 applyTheme();
 showView('home');
 if (!state.onboarded) renderOnboarding();
+else maybeShowInstall(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches ? 1000 : 2800);
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });

@@ -638,3 +638,35 @@ body.locked{overflow:hidden;}
 @media (prefers-reduced-motion:reduce){
   .mirror-svg,.entry-caption{opacity:1;transform:none;}
 }
+
+/* ---------- Aviso de instalação ---------- */
+.install-card{
+  position:fixed;z-index:45;left:12px;right:12px;bottom:calc(var(--tabbar-h) + var(--safe-b) + 12px);
+  max-width:496px;margin:0 auto;display:flex;gap:13px;align-items:flex-start;
+  background:var(--paper-raised);border:1px solid var(--line);border-radius:20px;
+  padding:14px 40px 14px 14px;box-shadow:var(--shadow);
+  animation:installIn .5s var(--ease-out);
+}
+.install-card::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;border-radius:20px 20px 0 0;background:linear-gradient(90deg, #47A5AF 0 25%, #0095DA 25% 50%, #8ED8F8 50% 75%, #4A5A64 75%);}
+.install-card.closing{animation:installOut .26s ease forwards;}
+.install-icon{width:48px;height:48px;border-radius:12px;flex:none;box-shadow:0 0 0 1px var(--line);}
+.install-body{min-width:0;}
+.install-title{font-weight:700;font-size:15.5px;line-height:1.3;}
+.install-text{font-size:13.5px;color:var(--ink-soft);margin-top:3px;line-height:1.45;}
+.install-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.install-actions .btn{min-height:38px;font-size:14px;}
+.install-close{position:absolute;top:8px;right:8px;width:34px;height:34px;border-radius:50%;border:0;background:transparent;color:var(--ink-faint);display:grid;place-items:center;}
+.install-close:active{background:var(--paper-dark);}
+@keyframes installIn{from{opacity:0;transform:translateY(16px) scale(.98);}to{opacity:1;transform:none;}}
+@keyframes installOut{to{opacity:0;transform:translateY(12px);}}
+@media (min-width:560px){.install-card{bottom:calc(var(--tabbar-h) + 32px);}}
+
+.device-badge{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--blue-deep);background:var(--blue-pale);padding:6px 12px;border-radius:999px;margin:0 0 12px;}
+.install-steps{list-style:none;padding:0;margin:14px 0;display:flex;flex-direction:column;gap:10px;}
+.install-steps li{display:flex;align-items:center;gap:12px;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:12px;}
+.is-n{width:24px;height:24px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:13px;font-weight:700;background:var(--blue-deep);color:var(--on-brand);}
+.is-ic{width:40px;height:40px;border-radius:11px;flex:none;display:grid;place-items:center;background:var(--blue-pale);color:var(--blue-deep);}
+.is-t{font-size:15px;line-height:1.45;}
+.install-preview{display:flex;gap:12px;align-items:center;font-size:13.5px;color:var(--ink-soft);margin:4px 0 12px;}
+.install-preview img{width:52px;height:52px;border-radius:13px;flex:none;box-shadow:0 0 0 1px var(--line), var(--shadow-sm);}
+.installed-ok{display:inline-flex;align-items:center;gap:8px;font-weight:600;color:var(--act-ink);background:var(--act-pale);padding:10px 14px;border-radius:12px;}

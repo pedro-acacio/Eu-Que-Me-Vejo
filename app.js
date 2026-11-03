@@ -584,6 +584,7 @@ function saveFlow() {
   ui.succScope = 'one';
   renderFlow();
 }
+function warmPDF() { setTimeout(() => { if ($('#reportCard')) preparePDF(); }, 60); }
 function renderSuccess() {
   $('#flow').innerHTML = `
     <div class="flow-inner">
@@ -601,6 +602,7 @@ function renderSuccess() {
       </div>
     </div>`;
   $('#successTitle').focus({ preventScroll: true });
+  warmPDF();
 }
 
 /* ---------------- Histórico ---------------- */
@@ -687,6 +689,7 @@ function renderHistory() {
     </div>` : ''}
     ${listHTML}
     ${list.length ? reportCardHTML('history') : ''}`;
+  warmPDF();
 }
 
 /* ---------------- Padrões ---------------- */
@@ -1090,7 +1093,7 @@ function reportCardHTML(where) {
     <div class="report-grid">
       <button class="btn btn-primary wide" type="button" data-report="pdf" style="--stage:var(--blue-deep)">${icon('file')} Baixar PDF</button>
       ${canShare ? `<button class="btn btn-soft wide" type="button" data-report="share">${icon('share')} Enviar PDF (WhatsApp, e-mail...)</button>` : ''}
-      <button class="btn btn-outline" type="button" data-report="email">${icon('mail', 'ic-sm')} E-mail</button>
+      <button class="btn btn-outline" type="button" data-report="email">${icon('mail', 'ic-sm')} E-mail + PDF</button>
       <button class="btn btn-outline" type="button" data-report="copy">${icon('copy', 'ic-sm')} Copiar</button>
     </div>
   </div>`;
@@ -1122,7 +1125,12 @@ function fileName() {
   const n = (state.name.trim() || 'paciente').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').toLowerCase();
   return `eu-que-me-vejo-${n}-${dateKey()}.pdf`;
 }
+let logoCache = null;
 async function loadLogoData() {
+  if (logoCache) return logoCache;
+  return (logoCache = loadLogoUncached());
+}
+async function loadLogoUncached() {
   try {
     const blob = await (await fetch('logo.png')).blob();
     return await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(blob); });
@@ -1232,29 +1240,75 @@ async function buildPDF(list) {
   }
   return doc;
 }
+/* O PDF é gerado antes do toque, para o compartilhamento abrir na hora
+   (o Safari do iPhone só permite compartilhar logo após o toque). */
+const pdfCache = { key: '', file: null, promise: null };
+function reportKey(list) { return list.map(e => e.id + ':' + e.date + e.time).join('|') + '#' + state.name; }
+function preparePDF() {
+  const list = reportEntries();
+  if (!list.length || !window.jspdf) return null;
+  const key = reportKey(list);
+  if (pdfCache.key === key && (pdfCache.file || pdfCache.promise)) return pdfCache.promise;
+  pdfCache.key = key; pdfCache.file = null;
+  pdfCache.promise = buildPDF(list).then(doc => {
+    if (pdfCache.key === key) pdfCache.file = new File([doc.output('blob')], fileName(), { type: 'application/pdf' });
+    return pdfCache.file;
+  }).catch(() => null);
+  return pdfCache.promise;
+}
+async function getPDFFile(list) {
+  if (pdfCache.key === reportKey(list) && pdfCache.file) return pdfCache.file;
+  const doc = await buildPDF(list);
+  return new File([doc.output('blob')], fileName(), { type: 'application/pdf' });
+}
+function saveFile(file) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(file); a.download = file.name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+function canShareFiles(file) {
+  try { return !!(navigator.canShare && navigator.canShare({ files: [file] })); } catch (e) { return false; }
+}
+function emailSubject(list) { return `Diário entre sessões · ${state.name.trim() || 'Paciente'} · ${periodLabel(list)}`; }
+
 async function doReport(kind) {
   const list = reportEntries();
   if (!list.length) return toast('Não há registros neste filtro.');
   if (kind === 'copy') return copyText(reportText(list));
+  let file;
+  try { file = await getPDFFile(list); }
+  catch (e) {
+    if (kind === 'email') { location.href = `mailto:${PRO.email}?subject=${encodeURIComponent(emailSubject(list))}&body=${encodeURIComponent(reportText(list))}`; return; }
+    return toast('Não foi possível gerar o PDF agora. Use "Copiar" e cole no e-mail.');
+  }
+
   if (kind === 'email') {
-    const subject = `Diário entre sessões · ${state.name.trim() || 'Paciente'} · ${periodLabel(list)}`;
-    location.href = `mailto:${PRO.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(reportText(list))}`;
+    const body = reportText(list);
+    if (canShareFiles(file)) {
+      // Celular: abre o compartilhamento com o PDF anexado e o texto no corpo.
+      copyText(PRO.email, true);
+      try {
+        await navigator.share({ files: [file], title: emailSubject(list), text: `Para: ${PRO.email}\n\n${body}` });
+        toast(`O e-mail da psicóloga (${PRO.email}) foi copiado. Cole no campo "Para".`);
+      } catch (e) {
+        if (e && e.name !== 'AbortError') location.href = `mailto:${PRO.email}?subject=${encodeURIComponent(emailSubject(list))}&body=${encodeURIComponent(body)}`;
+      }
+      return;
+    }
+    // Computador: baixa o PDF e abre o e-mail já endereçado, pedindo para anexar.
+    saveFile(file);
+    const note = `O relatório em PDF (${file.name}) foi baixado no seu aparelho. Anexe-o a este e-mail antes de enviar.\n\n`;
+    setTimeout(() => { location.href = `mailto:${PRO.email}?subject=${encodeURIComponent(emailSubject(list))}&body=${encodeURIComponent(note + body)}`; }, 400);
+    toast('PDF baixado. Anexe o arquivo ao e-mail que vai abrir.');
     return;
   }
-  try {
-    const doc = await buildPDF(list);
-    if (kind === 'share') {
-      const file = new File([doc.output('blob')], fileName(), { type: 'application/pdf' });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try { await navigator.share({ files: [file], title: 'Diário entre sessões' }); } catch (e) { /* cancelado */ }
-        return;
-      }
-    }
-    doc.save(fileName());
-    toast('PDF baixado.');
-  } catch (e) {
-    toast('Não foi possível gerar o PDF agora. Use "Copiar" e cole no e-mail.');
+  if (kind === 'share' && canShareFiles(file)) {
+    try { await navigator.share({ files: [file], title: 'Diário entre sessões' }); } catch (e) { /* cancelado */ }
+    return;
   }
+  saveFile(file);
+  toast('PDF baixado.');
 }
 async function copyText(text, quiet) {
   if (quiet === undefined && /^https?:/.test(text)) quiet = true;
@@ -1530,7 +1584,7 @@ document.addEventListener('click', e => {
   if (ds.hvalue !== undefined) { ui.histValue = ds.hvalue || null; return renderHistory(); }
   if (ds.pperiod) { ui.patPeriod = ds.pperiod; return renderPatterns(); }
   if (ds.report) return doReport(ds.report);
-  if (ds.rscope) { ui.succScope = ds.rscope; const c = $('#reportCard'); if (c) c.outerHTML = reportCardHTML('success'); return; }
+  if (ds.rscope) { ui.succScope = ds.rscope; const c = $('#reportCard'); if (c) c.outerHTML = reportCardHTML('success'); warmPDF(); return; }
   if (ds.themeSet) { state.theme = ds.themeSet; save(); applyTheme(); return renderAbout(); }
 });
 

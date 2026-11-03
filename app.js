@@ -1321,6 +1321,14 @@ document.addEventListener('change', e => {
 window.addEventListener('scroll', () => { $('#topbar').classList.toggle('scrolled', window.scrollY > 4); }, { passive: true });
 
 /* ---------------- Início do app ---------------- */
+// Animação de abertura: o espelho aparece, recebe um brilho e sai.
+(function () {
+  const el = $('#entryAnimation');
+  if (!el) return;
+  const quick = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  setTimeout(() => el.classList.add('fade-out'), quick ? 500 : 1900);
+  setTimeout(() => el.remove(), quick ? 900 : 2550);
+})();
 load();
 applyTheme();
 showView('home');

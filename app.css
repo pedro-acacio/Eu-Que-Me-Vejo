@@ -608,3 +608,33 @@ body.locked{overflow:hidden;}
 
 /* Emblema do espelho nas boas-vindas */
 .ob-hero .mirror-emblem{width:62px;height:auto;margin:0 0 20px;display:block;}
+
+/* ---------- Animação de abertura ---------- */
+.entry-animation{
+  position:fixed;inset:0;z-index:300;
+  background:linear-gradient(160deg, var(--paper), var(--blue-pale));
+  display:flex;align-items:center;justify-content:center;flex-direction:column;
+  transition:opacity .6s ease;
+}
+.entry-animation.fade-out{opacity:0;pointer-events:none;}
+.mirror-svg{
+  width:96px;height:auto;opacity:0;
+  transform:scale(.86) translateY(6px);
+  animation:mirrorIn 1s cubic-bezier(.22,.9,.32,1) forwards;
+}
+.mirror-shine{transform-origin:center;opacity:0;animation:mirrorShine 1.6s ease-in-out .5s forwards;}
+.entry-caption{
+  margin-top:16px;font-family:var(--font-display);font-size:15px;
+  color:var(--blue-deep);letter-spacing:.5px;opacity:0;
+  animation:captionIn .9s ease .55s forwards;
+}
+@keyframes mirrorIn{to{opacity:1;transform:scale(1) translateY(0);}}
+@keyframes mirrorShine{
+  0%{opacity:0;transform:translateX(-30%) rotate(18deg);}
+  45%{opacity:.9;}
+  100%{opacity:0;transform:translateX(30%) rotate(18deg);}
+}
+@keyframes captionIn{to{opacity:1;}}
+@media (prefers-reduced-motion:reduce){
+  .mirror-svg,.entry-caption{opacity:1;transform:none;}
+}

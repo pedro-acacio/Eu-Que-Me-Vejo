@@ -37,6 +37,63 @@
 </head>
 <body>
 
+<!-- Animação de abertura (o espelho) -->
+<div class="entry-animation" id="entryAnimation" aria-hidden="true">
+  <svg class="mirror-svg" viewBox="0 0 120 196" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="mirrorFrameGrad" x1="0" y1="0" x2="120" y2="196" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#47A5AF"/>
+        <stop offset="1" stop-color="#0095DA"/>
+      </linearGradient>
+      <clipPath id="mirrorClip">
+        <ellipse cx="60" cy="80" rx="35" ry="47"/>
+      </clipPath>
+    </defs>
+
+    <!-- glass -->
+    <ellipse cx="60" cy="80" rx="35" ry="47" fill="#8ED8F8" fill-opacity="0.14"/>
+    <!-- shine sweep, clipped to the glass -->
+    <g clip-path="url(#mirrorClip)">
+      <rect class="mirror-shine" x="20" y="18" width="16" height="124" fill="#FFFFFF" fill-opacity="0.55"/>
+    </g>
+
+    <!-- outer frame -->
+    <ellipse cx="60" cy="80" rx="40" ry="52" stroke="url(#mirrorFrameGrad)" stroke-width="2.6"/>
+    <!-- inner bevel line -->
+    <ellipse cx="60" cy="80" rx="34.5" ry="46" stroke="url(#mirrorFrameGrad)" stroke-width="1" stroke-opacity="0.55"/>
+    <!-- small facets around the frame -->
+    <g stroke="url(#mirrorFrameGrad)" stroke-width="1" stroke-opacity="0.5" stroke-linecap="round">
+      <line x1="60" y1="28" x2="60" y2="34"/>
+      <line x1="60" y1="126" x2="60" y2="132"/>
+      <line x1="20.5" y1="80" x2="26.5" y2="80"/>
+      <line x1="93.5" y1="80" x2="99.5" y2="80"/>
+      <line x1="33" y1="42" x2="37.4" y2="46.6"/>
+      <line x1="87" y1="42" x2="82.6" y2="46.6"/>
+      <line x1="33" y1="118" x2="37.4" y2="113.4"/>
+      <line x1="87" y1="118" x2="82.6" y2="113.4"/>
+    </g>
+
+    <!-- top crest / flourish -->
+    <circle cx="60" cy="9" r="2.1" fill="url(#mirrorFrameGrad)"/>
+    <path d="M60,15 C54,8 45,8 41,14 C40,18 44,21 49,20 C52,19.3 54.5,17.5 56,15.5"
+          stroke="url(#mirrorFrameGrad)" stroke-width="1.4" stroke-linecap="round"/>
+    <path d="M60,15 C66,8 75,8 79,14 C80,18 76,21 71,20 C68,19.3 65.5,17.5 64,15.5"
+          stroke="url(#mirrorFrameGrad)" stroke-width="1.4" stroke-linecap="round"/>
+    <path d="M60,15 L60,26" stroke="url(#mirrorFrameGrad)" stroke-width="1.6" stroke-linecap="round"/>
+
+    <!-- handle -->
+    <line x1="60" y1="132" x2="60" y2="150" stroke="url(#mirrorFrameGrad)" stroke-width="2.8" stroke-linecap="round"/>
+    <ellipse cx="60" cy="153" rx="7.5" ry="2.4" stroke="url(#mirrorFrameGrad)" stroke-width="1.4"/>
+    <line x1="60" y1="156" x2="60" y2="172" stroke="url(#mirrorFrameGrad)" stroke-width="2.8" stroke-linecap="round"/>
+
+    <!-- ornamented base -->
+    <path d="M38,186 C46,178 54,182 60,188 C66,182 74,178 82,186"
+          stroke="url(#mirrorFrameGrad)" stroke-width="1.6" stroke-linecap="round"/>
+    <ellipse cx="60" cy="188" rx="24" ry="4.4" stroke="url(#mirrorFrameGrad)" stroke-width="1.2" stroke-opacity="0.55"/>
+  </svg>
+  <div class="entry-caption">Eu Que Me Vejo</div>
+</div>
+
 <div class="app" id="app">
   <header class="topbar" id="topbar">
     <img class="topbar-logo logo-on-light" src="logo.png" alt="Socorro Silveira, Psicóloga Clínica" width="780" height="151">

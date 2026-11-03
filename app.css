@@ -689,3 +689,8 @@ body.locked{overflow:hidden;}
 .success h2:focus,.q-title:focus{outline:none;}
 
 .pro-headline{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--blue-mid);margin:6px auto 2px;max-width:320px;}
+
+/* ---------- Ajustes ---------- */
+.topbar-actions{display:flex;gap:8px;}
+#settingsBtn[aria-current="page"]{background:var(--blue-pale);border-color:transparent;}
+.back-link{display:inline-flex;align-items:center;gap:4px;border:0;background:none;color:var(--blue-deep);font-weight:600;font-size:15px;padding:10px 4px 0 0;}

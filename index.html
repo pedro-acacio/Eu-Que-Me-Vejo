@@ -116,7 +116,10 @@
   <header class="topbar" id="topbar">
     <img class="topbar-logo logo-on-light" src="logo.png" alt="Socorro Silveira, Psicóloga Clínica" width="780" height="151">
     <img class="topbar-logo logo-on-dark" src="logo-light.png" alt="" aria-hidden="true" width="780" height="151">
-    <button class="icon-btn" id="themeBtn" type="button" aria-label="Alternar tema claro ou escuro"></button>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="themeBtn" type="button" aria-label="Alternar tema claro ou escuro"></button>
+      <button class="icon-btn" id="settingsBtn" type="button" aria-label="Ajustes"></button>
+    </div>
   </header>
 
   <main id="main">
@@ -124,6 +127,7 @@
     <section class="view" id="view-history" aria-labelledby="historyTitle" hidden></section>
     <section class="view" id="view-patterns" aria-labelledby="patternsTitle" hidden></section>
     <section class="view" id="view-about" aria-labelledby="aboutTitle" hidden></section>
+    <section class="view" id="view-settings" aria-labelledby="settingsTitle" hidden></section>
   </main>
 
   <nav class="tabbar" id="tabbar" aria-label="Navegação principal"></nav>

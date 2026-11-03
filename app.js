@@ -150,6 +150,7 @@ const ICONS = {
   download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
   compassOpen: '<circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z"/>',
   link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+  settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
   trendDown: '<path d="m22 17-8.5-8.5-5 5L2 7"/><path d="M16 17h6v-6"/>'
 };
 function icon(name, cls = '') {
@@ -251,6 +252,7 @@ function applyTheme() {
   $('#metaTheme').setAttribute('content', t === 'dark' ? '#141D22' : '#FAF7F1');
   $('#themeBtn').innerHTML = icon(t === 'dark' ? 'sun' : 'moon');
   $('#themeBtn').setAttribute('aria-label', t === 'dark' ? 'Usar tema claro' : 'Usar tema escuro');
+  $('#settingsBtn').innerHTML = icon('settings');
 }
 mq && mq.addEventListener && mq.addEventListener('change', () => { if (state.theme === 'system') { applyTheme(); refresh(); } });
 
@@ -269,14 +271,16 @@ function renderTabbar() {
     </button>`).join('');
 }
 function showView(v) {
+  if (v === 'settings' && ui.view !== 'settings') ui.prevView = ui.view;
   ui.view = v;
   $$('.view').forEach(s => { s.hidden = s.id !== 'view-' + v; });
   renderTabbar();
+  const sb = $('#settingsBtn'); if (v === 'settings') sb.setAttribute('aria-current', 'page'); else sb.removeAttribute('aria-current');
   renderView(v);
   window.scrollTo({ top: 0 });
 }
 function renderView(v) {
-  ({ home: renderHome, history: renderHistory, patterns: renderPatterns, about: renderAbout })[v]();
+  ({ home: renderHome, history: renderHistory, patterns: renderPatterns, about: renderAbout, settings: renderSettings })[v]();
 }
 function refresh() { renderView(ui.view); }
 
@@ -846,12 +850,10 @@ function renderPatterns() {
 
 /* ---------------- Sobre ---------------- */
 function renderAbout() {
-  const themeBtns = [['system', 'Sistema'], ['light', 'Claro'], ['dark', 'Escuro']].map(([v, l]) =>
-    `<button type="button" data-theme-set="${v}" aria-pressed="${state.theme === v}">${l}</button>`).join('');
   const maps = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(PRO.mapsQuery);
   $('#view-about').innerHTML = `
     <h1 class="view-title" id="aboutTitle">Sobre</h1>
-    <p class="view-sub">Sua psicóloga, a terapia e os ajustes do app.</p>
+    <p class="view-sub">Sua psicóloga e a terapia que inspira este diário.</p>
 
     <div class="card pro">
       <div class="pro-head">
@@ -899,7 +901,20 @@ function renderAbout() {
     </div>
     <button class="btn btn-outline btn-block" type="button" data-sheet="example" style="margin-top:12px">${icon('file', 'ic-sm')} Ver um exemplo de registro</button>
 
-    <h2 class="section-title">Ajustes</h2>
+    <button class="btn btn-ghost btn-block" type="button" data-go="settings" style="margin-top:18px">${icon('settings', 'ic-sm')} Ajustes, privacidade e seus dados</button>
+    <p class="foot-note">Eu Que Me Vejo · versão 2.0</p>`;
+}
+
+/* ---------------- Ajustes (engrenagem no topo) ---------------- */
+function renderSettings() {
+  const themeBtns = [['system', 'Sistema'], ['light', 'Claro'], ['dark', 'Escuro']].map(([v, l]) =>
+    `<button type="button" data-theme-set="${v}" aria-pressed="${state.theme === v}">${l}</button>`).join('');
+  $('#view-settings').innerHTML = `
+    <button class="back-link" type="button" data-go="${ui.prevView || 'home'}">${icon('chevL', 'ic-sm')} Voltar</button>
+    <h1 class="view-title" id="settingsTitle">Ajustes</h1>
+    <p class="view-sub">Suas preferências, seus dados e como o app cuida da sua privacidade.</p>
+
+    <h2 class="section-title">Preferências</h2>
     <div class="card">
       <div class="setting">
         <label class="label" for="setName">Seu nome</label>
@@ -931,7 +946,7 @@ function renderAbout() {
     </div>
 
     <h2 class="section-title">Privacidade e cuidado</h2>
-    <div class="notice notice-privacy">${icon('shield')}<div><b>Privacidade e LGPD</b>Seus registros ficam guardados só neste aparelho, dentro deste navegador. Nada é enviado para servidores: não há login, cookies de rastreamento nem banco de dados. Eles só saem daqui quando você exporta ou envia um relatório, e podem ser apagados a qualquer momento nos ajustes acima.</div></div>
+    <div class="notice notice-privacy">${icon('shield')}<div><b>Privacidade e LGPD</b>Seus registros ficam guardados só neste aparelho, dentro deste navegador. Nada é enviado para servidores: não há login, cookies de rastreamento nem banco de dados. Eles só saem daqui quando você exporta ou envia um relatório, e podem ser apagados a qualquer momento em "Seus dados", acima.</div></div>
     <div class="notice notice-clinic">${icon('stethoscope')}<div><b>Aviso clínico</b>Este app é uma ferramenta de autoconhecimento inspirada na Terapia de Aceitação e Compromisso (ACT). Ele não substitui o acompanhamento psicológico. Em uma crise, ligue para o CVV no 188 (24 horas, gratuito) ou procure o SAMU no 192.</div></div>
     <p class="foot-note">Eu Que Me Vejo · versão 2.0</p>`;
 }
@@ -1547,7 +1562,7 @@ document.addEventListener('click', e => {
   if (ds.act === 'install-help') { hideInstallCard(); return openSheet(installSheetHTML(), 'Instalar na tela inicial'); }
   if (ds.act === 'install-close') return hideInstallCard();
   if (ds.act === 'install-now') { closeSheet(); return runInstallPrompt(); }
-  if (ds.act === 'install-never') { state.installDismissed = true; save(); hideInstallCard(); closeSheet(); return toast('Tudo bem. As instruções continuam em Sobre › Ajustes.'); }
+  if (ds.act === 'install-never') { state.installDismissed = true; save(); hideInstallCard(); closeSheet(); return toast('Tudo bem. As instruções continuam em Ajustes, no ícone de engrenagem.'); }
   if (ds.act === 'copy-link') return copyText(location.href.split('#')[0].split('?')[0]).then(() => toast('Endereço copiado. Cole no Safari ou no Chrome.'));
   if (ds.act === 'wipe') return confirmSheet({
     title: 'Apagar todos os registros?', text: 'Isso remove todos os registros e o rascunho deste aparelho. Não dá para desfazer. Se quiser guardar uma cópia, baixe o PDF no Histórico antes.',
@@ -1591,13 +1606,14 @@ document.addEventListener('click', e => {
   if (ds.pperiod) { ui.patPeriod = ds.pperiod; return renderPatterns(); }
   if (ds.report) return doReport(ds.report);
   if (ds.rscope) { ui.succScope = ds.rscope; const c = $('#reportCard'); if (c) c.outerHTML = reportCardHTML('success'); warmPDF(); return; }
-  if (ds.themeSet) { state.theme = ds.themeSet; save(); applyTheme(); return renderAbout(); }
+  if (ds.themeSet) { state.theme = ds.themeSet; save(); applyTheme(); return renderSettings(); }
 });
 
+$('#settingsBtn').addEventListener('click', () => showView(ui.view === 'settings' ? (ui.prevView || 'home') : 'settings'));
 $('#themeBtn').addEventListener('click', () => {
   state.theme = resolvedTheme() === 'dark' ? 'light' : 'dark';
   save(); applyTheme();
-  if (ui.view === 'about' || ui.view === 'patterns') refresh();
+  if (ui.view === 'settings' || ui.view === 'patterns') refresh();
 });
 $('#sheetOverlay').addEventListener('click', e => { if (e.target.id === 'sheetOverlay') closeSheet(); });
 document.addEventListener('keydown', e => {

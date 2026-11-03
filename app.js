@@ -250,7 +250,7 @@ function applyTheme() {
 mq && mq.addEventListener && mq.addEventListener('change', () => { if (state.theme === 'system') { applyTheme(); refresh(); } });
 
 /* ---------------- Navegação ---------------- */
-const ui = { view: 'home', histPeriod: '30', histValue: null, openEntry: null, patPeriod: '30' };
+const ui = { view: 'home', histPeriod: '30', histValue: null, openEntry: null, patPeriod: '30', succScope: 'one' };
 const TABS = [
   { v: 'home', label: 'Registrar', ic: 'pen' },
   { v: 'history', label: 'Histórico', ic: 'book' },
@@ -407,15 +407,62 @@ function renderFlow() {
           ${isReview ? reviewHTML() : stepHTML(step)}
         </div>
       </div>
-      <div class="flow-foot">
-        ${isReview
-          ? `<button class="btn btn-primary" type="button" data-flow="save">${icon('check')} ${flow.editingId ? 'Salvar alterações' : 'Salvar registro'}</button>`
-          : `<button class="btn btn-primary" type="button" data-flow="next">${flow.step === STEPS.length - 2 ? 'Revisar' : 'Continuar'} ${icon('chevR')}</button>`}
+      <div class="flow-foot-wrap">
+        <p class="flow-need" id="flowNeed" aria-live="polite"></p>
+        <div class="flow-foot">
+          ${isReview
+            ? `<button class="btn btn-primary" type="button" data-flow="save" id="flowNext">${icon('check')} ${flow.editingId ? 'Salvar alterações' : 'Salvar registro'}</button>`
+            : `<button class="btn btn-primary" type="button" data-flow="next" id="flowNext">${flow.step === STEPS.length - 2 ? 'Revisar' : 'Continuar'} ${icon('chevR')}</button>`}
+        </div>
       </div>
     </div>`;
   const h = $('.q-title', el);
   h && h.focus({ preventScroll: true });
   wireStep(step);
+  updateNext();
+}
+
+/* Todos os campos são obrigatórios: cada passo só avança quando está completo */
+function stepMissing(i) {
+  const st = STEPS[i], d = flow.d;
+  const txt = k => (d[k] || '').trim().length > 0;
+  switch (st && st.key) {
+    case 'situation': return !d.date || !d.time ? 'Informe a data e a hora.' : !txt('situation') ? 'Descreva o que aconteceu para continuar.' : '';
+    case 'emotions': return !d.emotions.length ? 'Escolha ao menos uma emoção para continuar.' : d.intensityBefore == null ? 'Marque o quanto isso pesou, de 0 a 10.' : '';
+    case 'struggle': return !txt('struggle') ? 'Escreva com o que você começou a lutar.' : '';
+    case 'thoughts': return !txt('thoughts') ? 'Anote os pensamentos que surgiram.' : '';
+    case 'values': return !d.values.length ? 'Escolha ao menos um valor para continuar.' : '';
+    case 'action': return !txt('action') ? 'Escreva o pequeno passo possível.' : d.intensityAfter == null ? 'Marque a intensidade de agora, de 0 a 10.' : '';
+    default: return '';
+  }
+}
+function firstIncomplete() {
+  for (let i = 0; i < STEPS.length - 1; i++) if (stepMissing(i)) return i;
+  return -1;
+}
+function updateNext() {
+  const btn = $('#flowNext'); if (!btn) return;
+  const isReview = STEPS[flow.step].type === 'review';
+  const blocked = isReview ? firstIncomplete() >= 0 : !!stepMissing(flow.step);
+  btn.classList.toggle('is-blocked', blocked);
+  btn.setAttribute('aria-disabled', blocked);
+  if (!blocked) { const n = $('#flowNeed'); n.textContent = ''; n.classList.remove('show'); }
+}
+function warnMissing(msg) {
+  const n = $('#flowNeed'), btn = $('#flowNext');
+  n.textContent = msg; n.classList.add('show');
+  btn.classList.remove('shake'); void btn.offsetWidth; btn.classList.add('shake');
+  try { navigator.vibrate && navigator.vibrate([20, 40, 20]); } catch (e) {}
+  const target = $('#fText') || $('.chip[aria-pressed="false"]', $('#flow'));
+  if ($('#fText') && !$('#fText').value.trim()) $('#fText').focus();
+  else if (msg.includes('0 a 10')) { const r = $('.range.unset', $('#flow')); r && r.focus(); }
+  else if (target && target.classList.contains('chip')) target.focus();
+}
+function tryNext() {
+  const msg = stepMissing(flow.step);
+  if (msg) return warnMissing(msg);
+  haptic();
+  flowGo(flow.step + 1);
 }
 
 function stepHTML(s) {
@@ -464,17 +511,17 @@ function intensityHTML(key, title, sub) {
 function wireStep(s) {
   const d = flow.d;
   const t = $('#fText');
-  if (t) t.addEventListener('input', () => { d[s.key] = t.value; persistDraft(); });
+  if (t) t.addEventListener('input', () => { d[s.key] = t.value; persistDraft(); updateNext(); });
   const fd = $('#fDate'), ft = $('#fTime');
-  fd && fd.addEventListener('change', () => { if (fd.value) { d.date = fd.value; persistDraft(); } });
-  ft && ft.addEventListener('change', () => { if (ft.value) { d.time = ft.value; persistDraft(); } });
+  fd && fd.addEventListener('change', () => { d.date = fd.value; persistDraft(); updateNext(); });
+  ft && ft.addEventListener('change', () => { d.time = ft.value; persistDraft(); updateNext(); });
   $$('.range', $('#flow')).forEach(r => {
     const upd = () => {
       const k = r.dataset.key, v = Number(r.value);
       d[k] = v; r.classList.remove('unset'); r.style.setProperty('--p', v * 10 + '%');
       r.setAttribute('aria-valuetext', v + ' de 10');
       const out = $('#v-' + k); out.textContent = v; out.classList.remove('unset');
-      persistDraft();
+      persistDraft(); updateNext();
     };
     r.addEventListener('input', upd);
     r.addEventListener('pointerdown', upd);
@@ -492,7 +539,7 @@ function reviewHTML() {
     const stepIdx = STEPS.findIndex(s => s.key === f.k);
     return `<button class="rv ${f.cls}" type="button" data-jump="${stepIdx}">
       <div class="rv-k">${icon(f.icon, 'ic-sm')} ${esc(f.label)} <span class="edit">${icon('edit', 'ic-sm')}</span></div>
-      <div class="rv-v ${txt ? '' : 'rv-empty'}">${txt ? esc(txt) : 'Não preenchido'}</div>
+      <div class="rv-v ${txt ? '' : 'rv-empty'}">${txt ? esc(txt) : 'Obrigatório: toque para preencher'}</div>
     </button>`;
   }).join('');
   return `
@@ -509,9 +556,11 @@ function flowGo(i) {
 }
 function saveFlow() {
   const d = flow.d;
-  if (!(d.situation || '').trim() && !(d.struggle || '').trim() && !(d.thoughts || '').trim() && !d.emotions.length) {
-    toast('Escreva ao menos um pouco da Etapa 1 antes de salvar.');
-    flowGo(0);
+  const miss = firstIncomplete();
+  if (miss >= 0) {
+    const msg = stepMissing(miss);
+    flowGo(miss);
+    warnMissing(msg);
     return;
   }
   const clean = {
@@ -532,6 +581,7 @@ function saveFlow() {
   haptic();
   flow.done = true;
   flow.savedId = clean.id;
+  ui.succScope = 'one';
   renderFlow();
 }
 function renderSuccess() {
@@ -542,9 +592,10 @@ function renderSuccess() {
           ${mark(92, true)}
           <h2 tabindex="-1" id="successTitle">${flow.editingId ? 'Registro atualizado' : 'Registro salvo'}</h2>
           <p>Você parou para se observar. Isso já é um passo na direção do que importa.</p>
+          ${reportCardHTML('success')}
           <div class="success-actions">
-            <button class="btn btn-primary" type="button" data-flow="to-history" style="--stage:var(--blue-deep)">${icon('book')} Ver no histórico</button>
-            <button class="btn btn-outline" type="button" data-flow="close">Voltar ao início</button>
+            <button class="btn btn-soft" type="button" data-flow="to-history">${icon('book')} Ver no histórico</button>
+            <button class="btn btn-ghost" type="button" data-flow="close">Voltar ao início</button>
           </div>
         </div>
       </div>
@@ -635,16 +686,7 @@ function renderHistory() {
       </div>` : ''}
     </div>` : ''}
     ${listHTML}
-    ${list.length ? `<div class="report card">
-      <div class="chart-title">Relatório para a sessão</div>
-      <div class="chart-sub" style="margin-bottom:0">${list.length} ${list.length === 1 ? 'registro' : 'registros'} no filtro atual, em ordem cronológica.</div>
-      <div class="report-grid">
-        <button class="btn btn-primary wide" type="button" data-report="pdf">${icon('file')} Baixar PDF</button>
-        ${canShare ? `<button class="btn btn-soft wide" type="button" data-report="share">${icon('share')} Enviar PDF (WhatsApp, e-mail...)</button>` : ''}
-        <button class="btn btn-outline" type="button" data-report="email">${icon('mail', 'ic-sm')} E-mail</button>
-        <button class="btn btn-outline" type="button" data-report="copy">${icon('copy', 'ic-sm')} Copiar</button>
-      </div>
-    </div>` : ''}`;
+    ${list.length ? reportCardHTML('history') : ''}`;
 }
 
 /* ---------------- Padrões ---------------- */
@@ -1025,7 +1067,34 @@ document.addEventListener('pointerdown', e => {
 window.addEventListener('scroll', hideTip, { passive: true });
 
 /* ---------------- Relatórios ---------------- */
-function reportEntries() { return sortEntries(historyEntries(), 1); }
+const REPORT_SCOPES = [['one', 'Este registro'], ['7', '7 dias'], ['30', '30 dias']];
+function successEntries() {
+  if (ui.succScope === 'one') return state.entries.filter(e => e.id === flow.savedId);
+  return sortEntries(state.entries.filter(e => inPeriod(e, ui.succScope)), 1);
+}
+function reportEntries() {
+  if (flow.open && flow.done) return sortEntries(successEntries(), 1);
+  return sortEntries(historyEntries(), 1);
+}
+function reportCardHTML(where) {
+  const list = where === 'success' ? successEntries() : historyEntries();
+  const canShare = !!(navigator.canShare && window.File);
+  const scope = where === 'success' ? `<div class="segmented report-scope" role="group" aria-label="O que entra no relatório">${REPORT_SCOPES.map(([v, l]) =>
+    `<button type="button" data-rscope="${v}" aria-pressed="${ui.succScope === v}">${l}</button>`).join('')}</div>` : '';
+  return `<div class="report card" id="reportCard">
+    <div class="chart-title">Relatório para a sessão</div>
+    <div class="chart-sub" style="margin-bottom:0">${where === 'success' && ui.succScope === 'one'
+      ? 'Envie este registro para sua psicóloga ou guarde o PDF para levar à sessão.'
+      : `${list.length} ${list.length === 1 ? 'registro' : 'registros'}${where === 'success' ? ' no período' : ' no filtro atual'}, em ordem cronológica.`}</div>
+    ${scope}
+    <div class="report-grid">
+      <button class="btn btn-primary wide" type="button" data-report="pdf" style="--stage:var(--blue-deep)">${icon('file')} Baixar PDF</button>
+      ${canShare ? `<button class="btn btn-soft wide" type="button" data-report="share">${icon('share')} Enviar PDF (WhatsApp, e-mail...)</button>` : ''}
+      <button class="btn btn-outline" type="button" data-report="email">${icon('mail', 'ic-sm')} E-mail</button>
+      <button class="btn btn-outline" type="button" data-report="copy">${icon('copy', 'ic-sm')} Copiar</button>
+    </div>
+  </div>`;
+}
 function periodLabel(list) {
   if (!list.length) return '';
   const a = fmtBR(list[0].date), b = fmtBR(list[list.length - 1].date);
@@ -1425,12 +1494,12 @@ document.addEventListener('click', e => {
     ok: 'Apagar tudo', onOk: () => { state.entries = []; state.draft = null; save(); refresh(); toast('Registros apagados deste aparelho.'); }
   });
 
-  if (ds.flow === 'next') { haptic(); return flowGo(flow.step + 1); }
+  if (ds.flow === 'next') return tryNext();
   if (ds.flow === 'back') return flow.step === 0 ? closeFlow() : flowGo(flow.step - 1);
   if (ds.flow === 'close') return closeFlow();
   if (ds.flow === 'save') return saveFlow();
   if (ds.flow === 'to-history') { const id = flow.savedId; closeFlow(); ui.histPeriod = 'all'; ui.histValue = null; ui.openEntry = id; return showView('history'); }
-  if (ds.jump) return flowGo(Number(ds.jump));
+  if (ds.jump) { const j = Number(ds.jump), miss = firstIncomplete(); return flowGo(miss >= 0 && miss < j ? miss : j); }
 
   if (ds.chip) {
     const arr = flow.d[ds.chip], v = ds.v, i = arr.indexOf(v);
@@ -1438,7 +1507,7 @@ document.addEventListener('click', e => {
     const on = i < 0;
     t.setAttribute('aria-pressed', on);
     t.innerHTML = (on ? icon('check') : '') + esc(v);
-    haptic(); persistDraft();
+    haptic(); persistDraft(); updateNext();
     return;
   }
 
@@ -1461,6 +1530,7 @@ document.addEventListener('click', e => {
   if (ds.hvalue !== undefined) { ui.histValue = ds.hvalue || null; return renderHistory(); }
   if (ds.pperiod) { ui.patPeriod = ds.pperiod; return renderPatterns(); }
   if (ds.report) return doReport(ds.report);
+  if (ds.rscope) { ui.succScope = ds.rscope; const c = $('#reportCard'); if (c) c.outerHTML = reportCardHTML('success'); return; }
   if (ds.themeSet) { state.theme = ds.themeSet; save(); applyTheme(); return renderAbout(); }
 });
 

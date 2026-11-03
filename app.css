@@ -670,3 +670,20 @@ body.locked{overflow:hidden;}
 .install-preview{display:flex;gap:12px;align-items:center;font-size:13.5px;color:var(--ink-soft);margin:4px 0 12px;}
 .install-preview img{width:52px;height:52px;border-radius:13px;flex:none;box-shadow:0 0 0 1px var(--line), var(--shadow-sm);}
 .installed-ok{display:inline-flex;align-items:center;gap:8px;font-weight:600;color:var(--act-ink);background:var(--act-pale);padding:10px 14px;border-radius:12px;}
+
+/* ---------- Campos obrigatórios ---------- */
+.flow-foot-wrap{background:linear-gradient(0deg, var(--paper) 75%, transparent);}
+.flow-foot-wrap .flow-foot{background:none;padding-top:6px;}
+.flow-need{margin:0;padding:0 20px;font-size:14px;font-weight:600;color:var(--danger);text-align:center;min-height:0;max-height:0;overflow:hidden;opacity:0;transition:opacity .2s, max-height .25s var(--ease-out), padding .25s;}
+.flow-need.show{opacity:1;max-height:60px;padding-top:10px;}
+.btn.is-blocked{opacity:.5;box-shadow:none;}
+.btn.shake{animation:shake .4s ease;}
+@keyframes shake{20%{transform:translateX(-7px);}40%{transform:translateX(6px);}60%{transform:translateX(-4px);}80%{transform:translateX(2px);}}
+.rv-v.rv-empty{color:var(--danger);font-style:normal;font-weight:600;font-size:14px;}
+
+/* Relatório na tela de registro salvo */
+.success .report{text-align:left;margin:4px auto 18px;max-width:420px;}
+.report-scope{margin-top:12px;}
+.success-actions .btn-ghost{min-height:48px;}
+
+.success h2:focus,.q-title:focus{outline:none;}

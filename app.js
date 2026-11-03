@@ -9,28 +9,33 @@
 const PRO = {
   name: 'Socorro Silveira',
   title: 'Psicóloga Clínica',
-  crp: 'CRP 1149',
+  crp: 'CRP 11/01149',
   specialty: 'Especialista em Terapias Contextuais com Base em Evidências Científicas',
+  headline: 'Psicologia e Liderança · Saúde mental na vida e no trabalho',
   tagline: 'Tornei minha profissão uma fonte de crescimento e realização pessoal — o que me motiva a buscar, incessantemente, formas de levar as pessoas a atingirem o seu melhor.',
   bio: [
     'Muito prazer, sou Socorro Silveira. Amo o estudo e as pesquisas científicas sobre o fascinante universo da mente e sua influência na vida e na felicidade das pessoas. Abracei o propósito de ajudar pessoas a encontrarem uma vida valiosa e plena de significado.',
+    'Há mais de duas décadas, minha trajetória é construída no encontro com pessoas, suas histórias e possibilidades de desenvolvimento. Meu olhar une clínica, liderança e emoções: o cuidado emocional e a construção de uma vida valiosa, com espaço para o que faz sentido para cada um.',
     'Trabalhar com psicologia é construir relações baseadas em confiança, respeito e empatia — por isso escolhi abordagens científicas apoiadas na escuta ativa e na compreensão genuína de necessidades e objetivos.',
-    'Além da atuação clínica, sou Mestre em Administração de Empresas e Diretora de Desenvolvimento Organizacional na Fortes Tecnologia, onde cuido da gestão de pessoas com foco em um ambiente que promova bem-estar e felicidade.'
+    'Além da atuação clínica, sou Mestre em Administração de Empresas e Diretora Executiva de Gente e Gestão na Fortes Tecnologia, onde cuido das pessoas com foco em saúde mental, bem-estar e liderança no ambiente de trabalho.'
   ],
   approaches: ['Terapias Contextuais com Base em Evidências Científicas', 'ACT', 'Terapia de Esquema', 'Terapia Comportamental Dialética (DBT)', 'Psicodrama', 'TCC'],
   roles: [
-    ['Diretora de Desenvolvimento Organizacional', 'Fortes Tecnologia — gestão de pessoas e cultura organizacional'],
-    ['Palestrante', 'Eventos de RH, desenvolvimento humano e organizacional']
+    ['Diretora Executiva de Gente e Gestão', 'Fortes Tecnologia — saúde mental, bem-estar e liderança no trabalho'],
+    ['Podcast Cuca Legal', 'Conversas sobre saúde mental no trabalho e gestão de pessoas, ao lado de Helaine Tahim'],
+    ['Projeto Elas Transformam', 'Encontros de autoconhecimento e desenvolvimento de mulheres, a partir da Psicologia Positiva'],
+    ['Palestrante', 'Saúde mental, segurança psicológica e liderança em empresas e eventos de RH']
   ],
   press: { img: 'photos/press-feature.jpg', alt: 'Matéria de revista sobre Socorro Silveira', caption: '"Gente de verdade não cabe em currículo" — matéria sobre autenticidade, repertório humano e escuta no recrutamento, com participação de Socorro Silveira.' },
   gallery: [
+    ['photos/artmed-2026.jpg', 'Artmed Experience 2026 · São Paulo'],
+    ['photos/elas-transformam-palestra.jpg', 'Elas Transformam · autoconhecimento e forças de caráter'],
+    ['photos/mind-summit-2026.jpg', 'Mind Summit 2026'],
+    ['photos/elas-transformam-encontro.jpg', 'Elas Transformam · encontro'],
     ['photos/premio-ser-humano.jpg', 'Prêmio Ser Humano 2026'],
-    ['photos/retrato-g4.jpg', 'Retrato profissional'],
-    ['photos/palestra-vermelho.jpg', 'Palestra'],
-    ['photos/fortes-tecnologia.jpg', 'Fortes Tecnologia'],
     ['photos/rh-com-feijao.jpg', 'RH com Feijão 2026']
   ],
-  photo: 'photos/perfil-hero.jpg',
+  photo: 'photos/perfil.jpg',
   instagram: { handle: '@socorrosilveirapsi', url: 'https://www.instagram.com/socorrosilveirapsi/' },
   email: 'socorrosilveira14@gmail.com',
   phones: [
@@ -852,6 +857,7 @@ function renderAbout() {
       <div class="pro-head">
         <img class="pro-photo" src="${PRO.photo}" alt="${esc(PRO.name)}" width="700" height="700">
         <h2 class="pro-name">${esc(PRO.name)}</h2>
+        <div class="pro-headline">${esc(PRO.headline)}</div>
         <div class="pro-crp">${esc(PRO.title)} · ${esc(PRO.crp)}</div>
         <div class="pro-spec">${esc(PRO.specialty)}</div>
         <blockquote class="pro-quote">"${esc(PRO.tagline)}"</blockquote>

@@ -687,3 +687,5 @@ body.locked{overflow:hidden;}
 .success-actions .btn-ghost{min-height:48px;}
 
 .success h2:focus,.q-title:focus{outline:none;}
+
+.pro-headline{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--blue-mid);margin:6px auto 2px;max-width:320px;}

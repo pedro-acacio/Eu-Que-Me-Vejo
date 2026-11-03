@@ -151,6 +151,7 @@ const ICONS = {
   compassOpen: '<circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z"/>',
   link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
   settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+  logOut: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
   trendDown: '<path d="m22 17-8.5-8.5-5 5L2 7"/><path d="M16 17h6v-6"/>'
 };
 function icon(name, cls = '') {
@@ -948,6 +949,7 @@ function renderSettings() {
     <h2 class="section-title">Privacidade e cuidado</h2>
     <div class="notice notice-privacy">${icon('shield')}<div><b>Privacidade e LGPD</b>Seus registros ficam guardados só neste aparelho, dentro deste navegador. Nada é enviado para servidores: não há login, cookies de rastreamento nem banco de dados. Eles só saem daqui quando você exporta ou envia um relatório, e podem ser apagados a qualquer momento em "Seus dados", acima.</div></div>
     <div class="notice notice-clinic">${icon('stethoscope')}<div><b>Aviso clínico</b>Este app é uma ferramenta de autoconhecimento inspirada na Terapia de Aceitação e Compromisso (ACT). Ele não substitui o acompanhamento psicológico. Em uma crise, ligue para o CVV no 188 (24 horas, gratuito) ou procure o SAMU no 192.</div></div>
+    <button class="btn btn-outline btn-block logout-btn" type="button" data-act="logout">${icon('logOut', 'ic-sm')} Sair</button>
     <p class="foot-note">Eu Que Me Vejo · versão 2.0</p>`;
 }
 
@@ -1010,7 +1012,7 @@ function closeSheetNow() {
   const ov = $('#sheetOverlay');
   ov.classList.add('closing');
   setTimeout(() => { ov.hidden = true; ov.classList.remove('closing'); }, 220);
-  if (!flow.open) document.body.classList.remove('locked');
+  if (!flow.open && $('#onboarding').hidden) document.body.classList.remove('locked');
   sheetReturnFocus && sheetReturnFocus.focus && sheetReturnFocus.focus({ preventScroll: true });
 }
 function closeSheet() { popLayer('sheet', closeSheetNow); }
@@ -1568,6 +1570,25 @@ document.addEventListener('click', e => {
   if (ds.act === 'install-now') { closeSheet(); return runInstallPrompt(); }
   if (ds.act === 'install-never') { state.installDismissed = true; save(); hideInstallCard(); closeSheet(); return toast('Tudo bem. As instruções continuam em Ajustes, no ícone de engrenagem.'); }
   if (ds.act === 'copy-link') return copyText(location.href.split('#')[0].split('?')[0]).then(() => toast('Endereço copiado. Cole no Safari ou no Chrome.'));
+  if (ds.act === 'logout') return openSheet(`<h3>Sair do Eu Que Me Vejo?</h3>
+    <p>Você volta para a tela de boas-vindas, como no primeiro acesso. Escolha o que fazer com os registros guardados neste aparelho.</p>
+    <div class="logout-options">
+      <button class="btn btn-primary btn-block" type="button" data-act="logout-keep" style="--stage:var(--blue-deep)">${icon('logOut', 'ic-sm')} Sair e manter meus registros</button>
+      <button class="btn btn-danger btn-block" type="button" data-act="logout-wipe" ${state.entries.length || draftHasContent(state.draft) ? '' : 'hidden'}>${icon('trash', 'ic-sm')} Sair e apagar tudo deste aparelho</button>
+      <button class="btn btn-ghost btn-block" type="button" data-close-sheet>Cancelar</button>
+    </div>
+    <p class="setting-help">Se este celular é usado por outras pessoas, apagar tudo garante que ninguém veja seus registros. Antes, você pode baixar o PDF no Histórico.</p>`, 'Sair');
+  if (ds.act === 'logout-keep' || ds.act === 'logout-wipe') {
+    const wipe = ds.act === 'logout-wipe';
+    closeSheet();
+    if (wipe) { state.entries = []; state.draft = null; }
+    state.name = ''; state.onboarded = false;
+    save();
+    ui.histPeriod = '30'; ui.histValue = null; ui.openEntry = null;
+    showView('home');
+    renderOnboarding();
+    return toast(wipe ? 'Você saiu e os registros foram apagados deste aparelho.' : 'Você saiu. Seus registros continuam guardados neste aparelho.');
+  }
   if (ds.act === 'wipe') return confirmSheet({
     title: 'Apagar todos os registros?', text: 'Isso remove todos os registros e o rascunho deste aparelho. Não dá para desfazer. Se quiser guardar uma cópia, baixe o PDF no Histórico antes.',
     ok: 'Apagar tudo', onOk: () => { state.entries = []; state.draft = null; save(); refresh(); toast('Registros apagados deste aparelho.'); }

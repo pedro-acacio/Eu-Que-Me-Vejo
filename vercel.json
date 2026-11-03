@@ -1,0 +1,10 @@
+{
+  "redirects": [
+    {
+      "source": "/:path(.*)",
+      "has": [{ "type": "host", "value": "eu-que-me-vejo.vercel.app" }],
+      "destination": "https://euquemevejo.vercel.app/:path",
+      "permanent": true
+    }
+  ]
+}

@@ -34,8 +34,7 @@ const PRO = {
   instagram: { handle: '@socorrosilveirapsi', url: 'https://www.instagram.com/socorrosilveirapsi/' },
   email: 'socorrosilveira14@gmail.com',
   phones: [
-    { label: '(85) 98761-4653', e164: '5585987614653' },
-    { label: '(85) 98609-3337', e164: '5585986093337' }
+    { label: '(85) 98761-4653', e164: '5585987614653' }
   ],
   address: 'Av. Engenheiro Santana Jr., 3000, Sala 901, Edifício Central Park, Cocó, Fortaleza/CE',
   mapsQuery: 'Av. Engenheiro Santana Jr., 3000, Edifício Central Park, Cocó, Fortaleza - CE'

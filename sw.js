@@ -1,11 +1,11 @@
 // Eu Que Me Vejo · service worker
 // Rede primeiro (atualizações chegam na hora); cache só como reserva sem internet.
-const CACHE_NAME = 'eu-que-me-vejo-202611031326';
+const CACHE_NAME = 'eu-que-me-vejo-202611031330';
 const ASSETS = [
   './',
   './index.html',
-  './app.css?v=202611031326',
-  './app.js?v=202611031326',
+  './app.css?v=202611031330',
+  './app.js?v=202611031330',
   './logo.png',
   './logo-light.png',
   './favicon.ico',

@@ -1515,9 +1515,13 @@ function renderOnboarding() {
   ob.innerHTML = `<div class="ob-inner">
     <img class="ob-logo" src="logo-light.png" alt="Socorro Silveira, Psicóloga Clínica" width="780" height="151">
     <div class="ob-hero">
-      ${MIRROR}
-      <h1 class="ob-title" id="obTitle">Eu Que Me Vejo</h1>
-      <p class="ob-sub">um espaço para observar, sem se perder no que se observa</p>
+      <div class="ob-brand">
+        ${MIRROR}
+        <div class="ob-brand-text">
+          <h1 class="ob-title" id="obTitle">Eu Que Me Vejo</h1>
+          <p class="ob-sub">um espaço para observar, sem se perder no que se observa</p>
+        </div>
+      </div>
       <ul class="ob-list">
         <li><span class="ob-ic">${icon('phoneDev')}</span><span><b>Fica só no seu aparelho</b>Seus registros são guardados neste navegador e em nenhum outro lugar.</span></li>
         <li><span class="ob-ic">${icon('lock')}</span><span><b>Sem login e sem rastreadores</b>Não há conta, banco de dados nem coleta de informações.</span></li>

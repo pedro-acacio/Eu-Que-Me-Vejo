@@ -607,7 +607,14 @@ body.locked{overflow:hidden;}
 .breath-timer{font-size:13.5px;color:var(--ink-faint);margin-top:4px;font-variant-numeric:tabular-nums;min-height:20px;}
 
 /* Emblema do espelho nas boas-vindas */
-.ob-hero .mirror-emblem{display:block;height:112px;width:auto;margin:0 0 24px;overflow:visible;}
+/* Espelho com a mesma largura dos ícones da lista (36px) e o mesmo espaço (12px):
+   o título começa na mesma coluna dos textos abaixo. */
+.ob-brand{display:flex;align-items:center;gap:12px;margin:0 0 28px;}
+.ob-brand .mirror-emblem{display:block;flex:none;width:36px;height:auto;margin:0;overflow:visible;}
+.ob-brand-text{min-width:0;}
+.ob-brand .ob-title{font-size:34px;margin:0 0 6px;}
+.ob-brand .ob-sub{margin:0;font-size:16px;line-height:1.4;}
+@media (max-width:360px){.ob-brand .ob-title{font-size:30px;}}
 
 /* ---------- Animação de abertura ---------- */
 .entry-animation{

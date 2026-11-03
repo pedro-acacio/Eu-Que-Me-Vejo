@@ -1,21 +1,33 @@
 # Eu Que Me Vejo
 
-Personal website / PWA for Socorro Silveira — a single page in plain HTML/CSS/JS, installable as an app (manifest, icons and iOS splash screens included).
+Between-sessions journal PWA inspired by Acceptance and Commitment Therapy (ACT), made for Socorro Silveira, Psicóloga Clínica. Plain HTML/CSS/JS, no build step, installable on iOS and Android.
 
-## How to view
+## Features
 
-Open `index.html` in your browser — no installation or server required. It can also be "installed" from the browser (Add to Home Screen) thanks to `manifest.json`.
+- Step-by-step entry: what happened, emotions and intensity, what I struggled with, thoughts, values, committed action, intensity afterwards
+- History grouped by day, with period and value filters, edit and delete
+- Patterns: entries per week, intensity before/after, time of day, frequent emotions and values
+- Branded PDF report (download or share), e-mail and copy
+- Guided one-minute breathing pause
+- Daily reminder as a calendar event (.ics)
+- Psychologist profile: bio, approaches, press, gallery, contacts
+- Light and dark themes (follows the system)
+
+Entries are stored only in the browser on the device (`localStorage`). Nothing is sent to a server.
 
 ## Structure
 
-- `index.html` — all of the page's content, styles and scripts
-- `manifest.json` — PWA configuration (name, icons, colors)
-- `icons/`, `photos/`, `splash/` — images used on the page and on the iOS launch screens
-
-## External dependencies
-
-The page loads a font from Google Fonts and the [jsPDF](https://github.com/parallax/jsPDF) library via CDN — an internet connection is required for these resources to load.
+- `index.html`: page shell, meta tags, icons and iOS splash screens
+- `app.css`: styles and color tokens
+- `app.js`: the whole app; psychologist data lives in the `PRO` object at the top
+- `sw.js`: service worker (network first, cache fallback)
+- `manifest.json`, `icons/`, `apple-touch-icon.png`, `favicon.ico`: install icons
+- `photos/`, `splash/`, `logo.png`, `logo-light.png`: images
 
 ## Running locally
 
-Just open `index.html` directly in the browser or serve the folder with any static server (e.g. `npx serve .`).
+Serve the folder with any static server (for example `npx serve .`) and open it in the browser. Icons, the PDF logo and installation need it to be served over http(s). Opening `index.html` as a file is not enough.
+
+## Deploy
+
+Hosted on Vercel and connected to this repository: every push to `main` deploys.

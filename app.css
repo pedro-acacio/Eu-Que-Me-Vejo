@@ -607,7 +607,7 @@ body.locked{overflow:hidden;}
 .breath-timer{font-size:13.5px;color:var(--ink-faint);margin-top:4px;font-variant-numeric:tabular-nums;min-height:20px;}
 
 /* Emblema do espelho nas boas-vindas */
-.ob-hero .mirror-emblem{width:62px;height:auto;margin:0 0 20px;display:block;}
+.ob-hero .mirror-emblem{display:block;height:112px;width:auto;margin:0 0 24px;overflow:visible;}
 
 /* ---------- Animação de abertura ---------- */
 .entry-animation{

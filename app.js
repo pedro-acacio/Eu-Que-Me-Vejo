@@ -158,7 +158,7 @@ function icon(name, cls = '') {
 }
 
 /* Emblema do espelho (identidade do app) */
-const MIRROR = `<svg class="mirror-emblem" viewBox="0 0 120 196" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+const MIRROR = `<svg class="mirror-emblem" viewBox="18 6 84 188" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <ellipse cx="60" cy="80" rx="35" ry="47" fill="#FFFFFF" fill-opacity="0.08"/>
           <ellipse cx="60" cy="80" rx="40" ry="52" stroke="#FFFFFF" stroke-opacity="0.9" stroke-width="2.2"/>
           <ellipse cx="60" cy="80" rx="34.5" ry="46" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1"/>

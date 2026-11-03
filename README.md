@@ -28,6 +28,10 @@ Entries are stored only in the browser on the device (`localStorage`). Nothing i
 
 Serve the folder with any static server (for example `npx serve .`) and open it in the browser. Icons, the PDF logo and installation need it to be served over http(s). Opening `index.html` as a file is not enough.
 
+## Updating
+
+After changing `app.js` or `app.css`, bump the `?v=` number on both tags in `index.html` and in `sw.js` (`CACHE_NAME` and the asset list), so phones fetch the new files instead of a cached copy.
+
 ## Deploy
 
 Live at https://euquemevejo.vercel.app (Vercel, connected to this repository: every push to `main` deploys).

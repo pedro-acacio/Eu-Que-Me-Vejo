@@ -1,11 +1,11 @@
 // Eu Que Me Vejo · service worker
 // Rede primeiro (atualizações chegam na hora); cache só como reserva sem internet.
-const CACHE_NAME = 'eu-que-me-vejo-v2.6';
+const CACHE_NAME = 'eu-que-me-vejo-202611031326';
 const ASSETS = [
   './',
   './index.html',
-  './app.css',
-  './app.js',
+  './app.css?v=202611031326',
+  './app.js?v=202611031326',
   './logo.png',
   './logo-light.png',
   './favicon.ico',
@@ -27,7 +27,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   event.respondWith(
-    fetch(event.request)
+    // no-cache: sempre confere com o servidor antes de usar a cópia do navegador
+    fetch(event.request, { cache: 'no-cache' })
       .then((response) => {
         if (response.ok && new URL(event.request.url).origin === self.location.origin) {
           const copy = response.clone();

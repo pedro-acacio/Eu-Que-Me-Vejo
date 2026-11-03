@@ -1306,7 +1306,7 @@ function installSteps(d) {
   return {
     intro: 'O Eu Que Me Vejo foi pensado para o celular. Abra este endereço no seu celular para instalá-lo.',
     steps: [
-      S('phoneDev', 'No celular, abra <b>eu-que-me-vejo.vercel.app</b>.'),
+      S('phoneDev', 'No celular, abra <b>euquemevejo.vercel.app</b>.'),
       S('plusSquare', 'Abra este aviso no celular para ver os passos do seu aparelho.'),
       S('download', `No computador, ${d.browser === 'safari' ? 'use Arquivo › Adicionar ao Dock' : 'use o ícone de instalar na barra de endereço'}, se quiser.`)
     ],

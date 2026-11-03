@@ -30,4 +30,4 @@ Serve the folder with any static server (for example `npx serve .`) and open it 
 
 ## Deploy
 
-Hosted on Vercel and connected to this repository: every push to `main` deploys.
+Live at https://euquemevejo.vercel.app (Vercel, connected to this repository: every push to `main` deploys).
